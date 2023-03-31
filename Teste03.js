@@ -1,50 +1,28 @@
-// Fonte dos dados de faturamento diário em formato JSON
-let dadosFaturamentoDiarioJSON = '{"01": 500, "02": 800, "03": 700, "04": 600, "05": 0, "06": 0, "07": 1000, "08": 900, "09": 750, "10": 600, "11": 850, "12": 950, "13": 1200, "14": 1000, "15": 850, "16": 700, "17": 600, "18": 500, "19": 0, "20": 0, "21": 1100, "22": 900, "23": 750, "24": 600, "25": 850, "26": 950, "27": 1200, "28": 1000, "29": 850, "30": 700, "31": 600}';
+const fs = require('fs');
 
-// Converte os dados de faturamento diário de JSON para objeto JavaScript
-let faturamentoDiario = JSON.parse(dadosFaturamentoDiarioJSON);
+function calcularFaturamento(jsonFilePath) {
+  const jsonData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf-8'));
 
-// Calcula o menor e o maior valor de faturamento ocorrido em um dia do mês
-let menorValor = Infinity;
-let maiorValor = -Infinity;
+  // Filtrando os valores de faturamento válidos (diferentes de zero)
+  const valoresFaturamento = jsonData.filter(item => item.valor !== 0).map(item => item.valor);
 
-for (let dia in faturamentoDiario) {
-  let valor = faturamentoDiario[dia];
-  if (valor > 0) { // considera apenas dias com faturamento
-    if (valor < menorValor) {
-      menorValor = valor;
-    }
-    if (valor > maiorValor) {
-      maiorValor = valor;
-    }
-  }
+  // Calculando o menor e o maior valor de faturamento
+  const menorValor = Math.min(...valoresFaturamento);
+  const maiorValor = Math.max(...valoresFaturamento);
+
+  // Calculando a média de faturamento
+  const mediaFaturamento = valoresFaturamento.reduce((acc, cur) => acc + cur, 0) / valoresFaturamento.length;
+
+  // Calculando o número de dias com faturamento acima da média
+  const diasAcimaMedia = valoresFaturamento.filter(valor => valor > mediaFaturamento).length;
+
+  return {
+    menorValor,
+    maiorValor,
+    diasAcimaMedia,
+  };
 }
 
-console.log("Menor valor de faturamento: " + menorValor);
-console.log("Maior valor de faturamento: " + maiorValor);
-
-// Calcula a média mensal de faturamento, ignorando os dias sem faturamento
-let somaFaturamento = 0;
-let numDiasFaturamento = 0;
-
-for (let dia in faturamentoDiario) {
-  let valor = faturamentoDiario[dia];
-  if (valor > 0) { // considera apenas dias com faturamento
-    somaFaturamento += valor;
-    numDiasFaturamento++;
-  }
-}
-
-let mediaMensal = somaFaturamento / numDiasFaturamento;
-
-// Calcula o número de dias em que o faturamento diário foi superior à média mensal
-let numDiasSuperiorMedia = 0;
-
-for (let dia in faturamentoDiario) {
-  let valor = faturamentoDiario[dia];
-  if (valor > mediaMensal) {
-    numDiasSuperiorMedia++;
-  }
-}
-
-console.log("Número de dias em que o faturamento diário foi superior à média mensal: " + numDiasSuperiorMedia);
+// Exemplo de uso
+const result = calcularFaturamento('dados.json');
+console.log(result);
